@@ -2,45 +2,69 @@ package Exception::Simple;
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
+our $VERSION = '0.001';
+$VERSION = eval $VERSION;
 
-use overload '""' => \&_as_string;
+use Carp qw/croak cluck/;
+use overload(
+    'fallback' => \&_as_string,
+    '""' => \&_as_string,
+);
 
 #add some POD
 
+sub _as_string{
+    return shift->error;
+}
+
+#error is special coz its the stringify method
+#it needs to be defined, and overridable by subclasses
 sub error{
-    my ( $self, $error ) = @_;
-
-    return $self->_get_set( 'error', $error );
-}
-
-sub _get_set{
-    my ( $self, $key, $value ) = @_;
-
-    if ( $value ){
-        $self->{ $key } = $value;
-    }
-    return $self->{ $key } || undef;
-}
-
-sub _as_string {
-    my ( $self ) = @_;
-    return $self->error;
+    return shift->{'error'} || undef;
 }
 
 sub new{
-    my ( $incovant, $error ) = @_;
+    my ( $incovant, @args ) = @_;
+
+    my %params;
+    if ( @args == 1 && !ref $args[0] ) {
+	    %params = ('error' => $args[0]);
+    } else {
+        %params = ( @args );
+    }
 
     my $class = ref( $incovant ) || $incovant;
-    my $self = bless({
-        'error' => $error,
-    }, $class);
+    my $self = bless( \%params, $class );
 
+#serious business
+    foreach my $key ( keys( %params ) ){
+        $self->_mk_accessor( $key );
+    }
+ 
     return $self;
 }
 
-sub throw {
-    die shift->new( @_ );
+sub _mk_accessor{
+    my ( $self, $key ) = @_;
+
+    if ( !__PACKAGE__->can($key) ){
+    #create accessor if function doesn't exist
+        my $accessor = __PACKAGE__ . "::$key";
+        {
+            no strict 'refs';
+            *$accessor = sub {
+                return $self->{ $key } || undef;
+            };
+        }
+    }
+}
+
+sub throw{
+    croak shift->new( @_ );
+}
+
+sub rethrow{
+    croak shift;
 }
 
 1;
