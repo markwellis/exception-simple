@@ -7,14 +7,18 @@ $VERSION = eval $VERSION;
 
 use Carp qw/croak cluck/;
 use overload(
-    'fallback' => \&_as_string,
-    '""' => \&_as_string,
+    'fallback' => \&error,
+    '""' => \&error,
 );
 
-#add some POD
+# __public__ #
 
-sub _as_string{
-    return shift->error;
+sub throw{
+    croak shift->_new( @_ );
+}
+
+sub rethrow{
+    croak shift;
 }
 
 #error is special coz its the stringify method
@@ -23,7 +27,9 @@ sub error{
     return shift->{'error'} || undef;
 }
 
-sub new{
+# __internal__ #
+
+sub _new{
     my ( $incovant, @args ) = @_;
 
     my %params;
@@ -44,27 +50,114 @@ sub new{
     return $self;
 }
 
+#creates an accessor for $name if it's not an existing method
 sub _mk_accessor{
-    my ( $self, $key ) = @_;
+    my ( $self, $name ) = @_;
 
-    if ( !__PACKAGE__->can($key) ){
+    if ( !__PACKAGE__->can($name) ){
     #create accessor if function doesn't exist
-        my $accessor = __PACKAGE__ . "::$key";
         {
             no strict 'refs';
-            *$accessor = sub {
-                return $self->{ $key } || undef;
+            *{__PACKAGE__ . "::${name}"} = sub {
+                return $self->{ $name } || undef;
             };
         }
     }
 }
 
-sub throw{
-    croak shift->new( @_ );
-}
-
-sub rethrow{
-    croak shift;
-}
-
 1;
+
+=head1 NAME
+
+Exception::Simple - simple exception class
+
+=head1 SYNOPSIS
+
+    use Exception::Simple;
+    use Try::Tiny;
+
+    try{
+        Exception::Simple->throw( 'oh noes!' );
+    } catch {
+        warn $_; 
+        warn $_->error;
+    };
+
+    my $data = { 
+        'foo' => 'bar',
+        'fibble' => [qw/wibble bibble/],
+    };
+    try{
+        Exception::Simple->throw( 
+            'error' => 'oh noes!',
+            'data' => $data,
+        );  
+    } catch {
+        warn $_; 
+        warn $_->error;
+
+        warn $_->data->{'foo'};
+    };
+
+=head1 DESCRIPTION
+
+pretty simple exception class. auto creates argument accessors.
+
+simple, lightweight and extensible are this modules goals.
+
+=head1 METHODS
+
+=head2 throw
+
+    #with just one argument $@->error is set
+    Exception::Simple->throw( 'error message' );
+    # $@ stringifies to $@->error
+
+    #or set multiple arguments (creates accessors)
+    Exception::Simple->throw( 
+        error => 'error message',
+        data => 'cutom atrribute',
+    );
+    # warn $@->data or something
+
+=head2 rethrow
+
+say you catch an error, but then you want to uncatch it
+
+    use Try::Tiny;
+
+    try{
+        Exception:Simple->throw( 'foobar' );
+    } catch {
+        if ( $_ eq 'foobar' ){
+        #not our error, rethrow
+            $_->rethrow; 
+        }
+    };
+
+=head2 error
+
+accessor for error, if its been set
+
+=head1 SUPPORT
+
+Bugs should always be submitted via the CPAN bug tracker
+
+For other issues, contact the maintainer
+
+=head1 AUTHORS
+
+n0body E<lt>n0body@thisaintnews.comE<gt>
+
+=head1 SEE ALSO
+
+L<http://thisaintnews.com>, L<Try::Tiny>
+
+=head1 LICENSE
+
+Copyright (C) 2010 by n0body L<http://thisaintnews.com/>
+
+This library is free software, you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
