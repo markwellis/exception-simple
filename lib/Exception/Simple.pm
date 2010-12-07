@@ -5,7 +5,7 @@ use warnings;
 our $VERSION = '0.001';
 $VERSION = eval $VERSION;
 
-use Carp qw/croak cluck/;
+use Carp qw/croak/;
 use overload(
     'fallback' => \&error,
     '""' => \&error,
@@ -58,7 +58,7 @@ sub _mk_accessor{
     #create accessor if function doesn't exist
         {
             no strict 'refs';
-            *{__PACKAGE__ . "::${name}"} = sub {
+            *{"@{[ __PACKAGE__ ]}::${name}"} = sub {
                 return $self->{ $name } || undef;
             };
         }
@@ -74,7 +74,7 @@ Exception::Simple - simple exception class
 =head1 SYNOPSIS
 
     use Exception::Simple;
-    use Try::Tiny;
+    use Try::Tiny; #or just use eval {}, it's all good
 
     try{
         Exception::Simple->throw( 'oh noes!' );
