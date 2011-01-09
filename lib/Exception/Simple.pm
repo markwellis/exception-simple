@@ -2,7 +2,7 @@ package Exception::Simple;
 use strict;
 use warnings;
 
-our $VERSION = '0.001';
+our $VERSION = '0.002';
 $VERSION = eval $VERSION;
 
 use Carp qw/croak/;
@@ -33,8 +33,8 @@ sub _new{
     my ( $incovant, @args ) = @_;
 
     my %params;
-    if ( @args == 1 && !ref $args[0] ) {
-	    %params = ('error' => $args[0]);
+    if ( ( @args == 1 ) && !ref( $args[0] ) ) {
+	    %params = ( 'error' => $args[0] );
     } else {
         %params = ( @args );
     }
@@ -44,7 +44,9 @@ sub _new{
 
 #serious business
     foreach my $key ( keys( %params ) ){
-        $self->_mk_accessor( $key );
+        if ( !__PACKAGE__->can( $key ) ){
+            $self->_mk_accessor( $key );
+        }
     }
  
     return $self;
@@ -54,14 +56,11 @@ sub _new{
 sub _mk_accessor{
     my ( $self, $name ) = @_;
 
-    if ( !__PACKAGE__->can($name) ){
-    #create accessor if function doesn't exist
-        {
-            no strict 'refs';
-            *{"@{[ __PACKAGE__ ]}::${name}"} = sub {
-                return $self->{ $name } || undef;
-            };
-        }
+    {
+        no strict 'refs';
+        *{__PACKAGE__ . '::' . $name} = sub {
+            return $self->{ $name } || undef;
+        };
     }
 }
 
