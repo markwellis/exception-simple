@@ -2,7 +2,7 @@ package Exception::Simple;
 use strict;
 use warnings;
 
-our $VERSION = '0.002';
+our $VERSION = '0.003';
 $VERSION = eval $VERSION;
 
 use Carp qw/croak/;
@@ -56,10 +56,11 @@ sub _new{
 sub _mk_accessor{
     my ( $self, $name ) = @_;
 
+    my $class = ref( $self ) || $self;
     {
         no strict 'refs';
-        *{__PACKAGE__ . '::' . $name} = sub {
-            return $self->{ $name } || undef;
+        *{$class . '::' . $name} = sub {
+            return shift->{ $name } || undef;
         };
     }
 }
