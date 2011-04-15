@@ -2,13 +2,13 @@ package Exception::Simple;
 use strict;
 use warnings;
 
-our $VERSION = '0.003';
+our $VERSION = '0.004';
 $VERSION = eval $VERSION;
 
 use Carp qw/croak/;
 use overload(
-    'fallback' => \&error,
-    '""' => \&error,
+    'fallback' => 1,
+    '""'       => sub { shift->error },
 );
 
 # __public__ #
@@ -30,7 +30,7 @@ sub error{
 # __internal__ #
 
 sub _new{
-    my ( $incovant, @args ) = @_;
+    my ( $invocant, @args ) = @_;
 
     my %params;
     if ( ( @args == 1 ) && !ref( $args[0] ) ) {
@@ -39,16 +39,16 @@ sub _new{
         %params = ( @args );
     }
 
-    my $class = ref( $incovant ) || $incovant;
+    my $class = ref( $invocant ) || $invocant;
     my $self = bless( \%params, $class );
 
 #serious business
     foreach my $key ( keys( %params ) ){
-        if ( !__PACKAGE__->can( $key ) ){
+        if ( !$self->can( $key ) ){
             $self->_mk_accessor( $key );
         }
     }
- 
+
     return $self;
 }
 
@@ -148,6 +148,8 @@ For other issues, contact the maintainer
 =head1 AUTHORS
 
 n0body E<lt>n0body@thisaintnews.comE<gt>
+
+Stephen Thirlwall
 
 =head1 SEE ALSO
 

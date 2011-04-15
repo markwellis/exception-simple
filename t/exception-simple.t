@@ -66,4 +66,26 @@ use Exception::Simple;
     } 'Exception::Simple';
 }
 
+{
+    {
+        package Derived;
+        use parent 'Exception::Simple';
+
+        sub error { 'Error=' . shift->{error} }
+        sub noclobber { 'original' }
+    }
+
+    throws_ok{
+        Derived->throw(
+            'error' => 'this is an error',
+            'noclobber' => 'clobbered'
+        );
+    } 'Derived';
+
+    my $e = $@;
+    isa_ok( $e, 'Derived' );
+    is( $e->noclobber, 'original', 'derived class accessors are preserved' );
+    is( $e, 'Error=this is an error', 'stringify works for derived classes' );
+}
+
 done_testing();
