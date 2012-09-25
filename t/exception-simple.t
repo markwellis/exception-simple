@@ -83,9 +83,39 @@ use Exception::Simple;
     } 'Derived';
 
     my $e = $@;
-    isa_ok( $e, 'Derived' );
     is( $e->noclobber, 'original', 'derived class accessors are preserved' );
     is( $e, 'Error=this is an error', 'stringify works for derived classes' );
+    
+    throws_ok{
+        Derived->throwc(
+            'Exception::Simple::Derived::Specific',
+            'error' => 'this is an error',
+            'noclobber' => 'clobbered'
+        );
+    } 'Exception::Simple::Derived::Specific';
+
+    my $e = $@;
+    is( $e->noclobber, 'original', 'derived override class accessors are preserved' );
+    is( $e, 'Error=this is an error', 'stringify works for derived overridden classes' );
+
+}
+
+{
+    throws_ok{
+        Exception::Simple->throwc('Exception::Simple::Class', 'this is an error');
+    } 'Exception::Simple::Class';
+
+    my $e = $@;
+    isa_ok( $e, "Exception::Simple::Class" );
+
+    ok( scalar($e) eq 'this is an error', 'stringifaction works' );
+    is( $e->error, 'this is an error', 'error method works' );
+
+    throws_ok{
+        $e->rethrow;
+    } 'Exception::Simple::Class';
+    is($@, 'this is an error', 'rethrow: stringifaction works');
+    is( $@->error, 'this is an error', 'rethrow: error method works' );
 }
 
 done_testing();
