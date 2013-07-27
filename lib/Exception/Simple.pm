@@ -2,57 +2,44 @@ package Exception::Simple;
 use strict;
 use warnings;
 
-our $VERSION = '0.006';
+our $VERSION = '0.007';
 $VERSION = eval $VERSION;
 
-use Carp qw/croak/;
 use overload(
     'fallback' => 1,
-    '""'       => sub { shift->error },
+    '""'       => sub { shift->_string },
 );
 
 # __public__ #
-
 sub throw{
-    croak shift->_new( @_ );
-}
+    my $self = shift;
+    my %params;
 
-sub throwc{
-    my ( $invocant, $exception_class, @args ) = @_;
-
-    {
-        no strict "refs";
-
-        my $isa = "$exception_class\::ISA";
-        if ( !grep( /^$invocant$/, $isa ) ){
-            push( @{ $isa }, $invocant );
-        }
+    if ( @_ == 1 ){
+	    %params = ( 'error' => $_[0] );
+    } else {
+         %params = ( @_ );
     }
 
-    croak $exception_class->_new( @args );
+    ( $params{'package'}, $params{'filename'}, $params{'line'} ) = caller;
+
+    die $self->_new( %params );
 }
 
 sub rethrow{
-    croak shift;
-}
-
-#error is special coz its the stringify method
-#it needs to be defined, and overridable by subclasses
-sub error{
-    return shift->{'error'} || undef;
+    die shift;
 }
 
 # __internal__ #
 
-sub _new{
-    my ( $invocant, @args ) = @_;
+sub _string{
+    my $self = shift;
+    return $self->error . ' at ' . $self->filename . ' line ' . $self->line;
+}
 
-    my %params;
-    if ( ( @args == 1 ) && !ref( $args[0] ) ) {
-	    %params = ( 'error' => $args[0] );
-    } else {
-        %params = ( @args );
-    }
+sub _new{
+    my $invocant = shift;
+    my %params = ( @_ );
 
     my $class = ref( $invocant ) || $invocant;
     my $self = bless( \%params, $class );
@@ -95,7 +82,7 @@ Exception::Simple - simple exception class
     try{
         Exception::Simple->throw( 'oh noes!' );
     } catch {
-        warn $_; #"oh noes!" 
+        warn $_; #"oh noes! at filename.pl line 3"
         warn $_->error; #"oh noes!"
     };
 
@@ -110,33 +97,6 @@ Exception::Simple - simple exception class
         );  
     } catch {
         warn $_; #"oh noes!"
-        warn $_->error; #"oh noes!"
-
-        warn $_->data->{'foo'}; #"bar"
-    };
-   
-    ### throwc ###
-    try{
-        Exception::Simple->throwc( "Some::Fake::Exception::Class", 'oh noes!' );
-    } catch {
-        warn $_; #"oh noes!"
-        warn ref( $_ ); #"Some::Fake::Exception::Class"
-        warn $_->error; #"oh noes!"
-    };
-
-    my $data = { 
-        'foo' => 'bar',
-        'fibble' => [qw/wibble bibble/],
-    };
-    try{
-        Exception::Simple->throwc( 
-            'Some::Fake::Exception::Class',
-            'error' => 'oh noes!',
-            'data' => $data,
-        );  
-    } catch {
-        warn $_; #"oh noes!"
-        warn ref( $_ ); #"Some::Fake::Exception::Class"
         warn $_->error; #"oh noes!"
 
         warn $_->data->{'foo'}; #"bar"
@@ -162,24 +122,6 @@ or set multiple arguments (creates accessors)
     );
     # warn $@->data or something
 
-=head2 throwc
-
-Same as throw, except the first argument is a classname
-which will become the classname of the exception object.
-
-Useful for throwing specific execptions without having to 
-create lots of packages.
-
-    try{
-        Exception::Simple->throwc( "Some::Fake::Exception::Class", 'oh noes!' );
-    } catch {
-        warn ref( $_ ); #Some::Fake::Exception::Class
-    };
-    
-B<WARNING>: using throwc with a real classname is unsupported
-i.e. 
-    throwc( "Data::Dumper", "derp" ) #you just made god kill a kitten
-
 =head2 rethrow
 
 say you catch an error, but then you want to uncatch it
@@ -197,7 +139,19 @@ say you catch an error, but then you want to uncatch it
 
 =head2 error
 
-accessor for error, if its been set
+accessor for error message (set if only 1 arg is passed to throw)
+
+=head2 package
+
+package that threw the exception
+
+=head2 filename
+
+filename of the code that threw the exception
+
+=head2 line
+
+line number that threw the exception
 
 =head1 SUPPORT
 
@@ -219,7 +173,7 @@ L<http://thisaintnews.com>, L<Try::Tiny>
 
 =head1 LICENSE
 
-Copyright (C) 2012 by n0body L<http://thisaintnews.com/>
+Copyright (C) 2013 by n0body L<http://thisaintnews.com/>
 
 This library is free software, you can redistribute it and/or modify
 it under the same terms as Perl itself.

@@ -13,13 +13,13 @@ use Exception::Simple;
 
     my $e = $@;
 
-    ok( scalar($e) eq 'this is an error', 'stringifaction works' );
+    is($e, 'this is an error at t/exception-simple.t line 11', 'stringifaction works' );
     is( $e->error, 'this is an error', 'error method works' );
 
     throws_ok{
         $e->rethrow;
     } 'Exception::Simple';
-    is($@, 'this is an error', 'rethrow: stringifaction works');
+    is($@, 'this is an error at t/exception-simple.t line 11', 'rethrow: stringifaction works');
     is( $@->error, 'this is an error', 'rethrow: error method works' );
 }
 
@@ -30,13 +30,13 @@ use Exception::Simple;
 
     my $e = $@;
 
-    is( $e, 'this is an error', 'stringifaction works' );
+    is( $e, 'this is an error at t/exception-simple.t line 28', 'stringifaction works' );
     is( $e->error, 'this is an error', 'error method works' );
 
     throws_ok{
         $e->rethrow;
     } 'Exception::Simple';
-    is($@, 'this is an error', 'rethrow: stringifaction works');
+    is($@, 'this is an error at t/exception-simple.t line 28', 'rethrow: stringifaction works');
     is( $@->error, 'this is an error', 'rethrow: error method works' );
 }
 
@@ -83,39 +83,31 @@ use Exception::Simple;
     } 'Derived';
 
     my $e = $@;
-    is( $e->noclobber, 'original', 'derived class accessors are preserved' );
-    is( $e, 'Error=this is an error', 'stringify works for derived classes' );
-    
-    throws_ok{
-        Derived->throwc(
-            'Exception::Simple::Derived::Specific',
-            'error' => 'this is an error',
-            'noclobber' => 'clobbered'
-        );
-    } 'Exception::Simple::Derived::Specific';
-
-    my $e = $@;
     is( $e->noclobber, 'original', 'derived override class accessors are preserved' );
-    is( $e, 'Error=this is an error', 'stringify works for derived overridden classes' );
+    is( $e, 'Error=this is an error at t/exception-simple.t line 79', 'stringify works for derived overridden classes' );
 
 }
 
 {
-    throws_ok{
-        Exception::Simple->throwc('Exception::Simple::Class', 'this is an error');
-    } 'Exception::Simple::Class';
+    {
+        package Exception::Simple::Test;
+        sub new{
+            bless({}, shift);
+        }
+        sub something{
+            Exception::Simple->throw('something');
+        }
+        1;
+    }
 
+    my $test = Exception::Simple::Test->new;
+
+    throws_ok{
+        $test->something
+    } 'Exception::Simple';
     my $e = $@;
-    isa_ok( $e, "Exception::Simple::Class" );
-
-    ok( scalar($e) eq 'this is an error', 'stringifaction works' );
-    is( $e->error, 'this is an error', 'error method works' );
-
-    throws_ok{
-        $e->rethrow;
-    } 'Exception::Simple::Class';
-    is($@, 'this is an error', 'rethrow: stringifaction works');
-    is( $@->error, 'this is an error', 'rethrow: error method works' );
+    is( $e, 'something at t/exception-simple.t line 98', 'filename and line set correctly' );
+    is( $e->package, 'Exception::Simple::Test', 'package set correctly' );
 }
 
 done_testing();
