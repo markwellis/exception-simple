@@ -1,3 +1,6 @@
+0.008
+    addded caveats section to docs
+    changed issue tracker to github
 0.007
     added caller information to thrown exception
     improved stringifaction so it shows from where the exception was thrown

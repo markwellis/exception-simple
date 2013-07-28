@@ -2,7 +2,7 @@ package Exception::Simple;
 use strict;
 use warnings;
 
-our $VERSION = '0.007';
+our $VERSION = '0.008';
 $VERSION = eval $VERSION;
 
 use overload(
@@ -153,9 +153,15 @@ filename of the code that threw the exception
 
 line number that threw the exception
 
+=head1 CAVEATS
+
+If you pass in package, filename or line, they will be overwritten with the caller information
+
+If you don't pass in error, then you'll get an undef warning on stringify
+
 =head1 SUPPORT
 
-Bugs should always be submitted via the CPAN bug tracker
+Please submit bugs through L<https://github.com/n0body-/exception-simple/issues>
 
 For other issues, contact the maintainer
 
