@@ -2,7 +2,7 @@ package Exception::Simple;
 use strict;
 use warnings;
 
-our $VERSION = '0.008';
+our $VERSION = '0.009';
 $VERSION = eval $VERSION;
 
 use overload(
