@@ -10,8 +10,8 @@ test_requires 'parent';
 perl_version '5.008';
 
 resources(
-    'bugtracker'  => 'https://github.com/n0body-/exception-simple/issues',
-    'repository'  => 'https://github.com/n0body-/exception-simple.git',
+    'bugtracker'  => 'https://github.com/markwellis/exception-simple/issues',
+    'repository'  => 'https://github.com/markwellis/exception-simple.git',
 );
 
 auto_install;

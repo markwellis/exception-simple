@@ -2,7 +2,7 @@ package Exception::Simple;
 use strict;
 use warnings;
 
-our $VERSION = '0.009';
+our $VERSION = '0.009001';
 $VERSION = eval $VERSION;
 
 use overload(
@@ -161,13 +161,13 @@ If you don't pass in error, then you'll get an undef warning on stringify
 
 =head1 SUPPORT
 
-Please submit bugs through L<https://github.com/n0body-/exception-simple/issues>
+Please submit bugs through L<https://github.com/markwellis/exception-simple/issues>
 
 For other issues, contact the maintainer
 
 =head1 AUTHOR
 
-n0body E<lt>n0body@thisaintnews.comE<gt>
+Mark Ellis E<lt>markellis@cpan.orgE<gt>
 
 =head1 CONTRIBUTORS
 
@@ -175,11 +175,11 @@ Stephen Thirlwall
 
 =head1 SEE ALSO
 
-L<http://thisaintnews.com>, L<Try::Tiny>
+L<Try::Tiny>
 
 =head1 LICENSE
 
-Copyright (C) 2013 by n0body L<http://thisaintnews.com/>
+Copyright 2014 Mark Ellis E<lt>markellis@cpan.orgE<gt>
 
 This library is free software, you can redistribute it and/or modify
 it under the same terms as Perl itself.

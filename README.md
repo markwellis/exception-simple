@@ -1,4 +1,5 @@
-[![Build Status](https://travis-ci.org/n0body-/exception-simple.png)](https://travis-ci.org/n0body-/exception-simple)
+[![Build Status](https://travis-ci.org/markwellis/exception-simple.png)](https://travis-ci.org/markwellis/exception-simple)
+[![Coverage Status](https://coveralls.io/repos/markwellis/exception-simple/badge.png)](https://coveralls.io/r/markwellis/exception-simple)
 
 Exception::Simple
 =====
