@@ -2,13 +2,14 @@ package Exception::Simple;
 use strict;
 use warnings;
 
-our $VERSION = '0.009001';
+our $VERSION = '1.000000';
 $VERSION = eval $VERSION;
 
 use overload(
     'fallback' => 1,
-    '""'       => sub { shift->_string },
+    '""'       => sub { shift->as_string },
 );
+use Carp;
 
 # __public__ #
 sub throw{
@@ -16,12 +17,12 @@ sub throw{
     my %params;
 
     if ( @_ == 1 ){
-	    %params = ( 'error' => $_[0] );
+        %params = ( 'error' => $_[0] );
     } else {
          %params = ( @_ );
     }
 
-    ( $params{'package'}, $params{'filename'}, $params{'line'} ) = caller;
+    ( $params{'_package'}, $params{'_filename'}, $params{'_line'} ) = caller;
 
     die $self->_new( %params );
 }
@@ -32,9 +33,23 @@ sub rethrow{
 
 # __internal__ #
 
-sub _string{
+sub import {
+    my ( $pkg, $alias ) = ( @_ );
+
+    if ( $alias ) {
+        my $target = caller;
+        croak "sub $alias already exists in $target" if $target->can($alias);
+
+        {
+            no strict 'refs';
+            *{"${target}::${alias}"} = sub() { return $pkg };
+        }
+    }
+}
+
+sub as_string{
     my $self = shift;
-    return $self->error . ' at ' . $self->filename . ' line ' . $self->line;
+    return $self->error;
 }
 
 sub _new{
@@ -54,7 +69,7 @@ sub _new{
     return $self;
 }
 
-#creates an accessor for $name if it's not an existing method
+#creates an accessor for $name
 sub _mk_accessor{
     my ( $self, $name ) = @_;
 
@@ -82,19 +97,19 @@ Exception::Simple - simple exception class
     try{
         Exception::Simple->throw( 'oh noes!' );
     } catch {
-        warn $_; #"oh noes! at filename.pl line 3"
+        warn $_; #"oh noes!"
         warn $_->error; #"oh noes!"
     };
 
-    my $data = { 
+    my $data = {
         'foo' => 'bar',
         'fibble' => [qw/wibble bibble/],
     };
     try{
-        Exception::Simple->throw( 
+        Exception::Simple->throw(
             'error' => 'oh noes!',
             'data' => $data,
-        );  
+        );
     } catch {
         warn $_; #"oh noes!"
         warn $_->error; #"oh noes!"
@@ -102,10 +117,34 @@ Exception::Simple - simple exception class
         warn $_->data->{'foo'}; #"bar"
     };
 
+
 =head1 DESCRIPTION
 
 pretty simple exception class. auto creates argument accessors.
 simple, lightweight and extensible are this modules goals.
+
+=head1 ALIAS
+
+When using this module, you can specify a shortcut method, so you don't have to
+type the full module name each time.
+
+This works by importing a sub with the name specified into the current namespace,
+that returns the package name so you need to make sure this sub does not already exist,
+or you'll get an error
+
+e.g.
+
+    use Exception::Simple qw/E/;
+    use Try::Tiny; #or just use eval {}, it's all good
+
+    ### throw ###
+    try{
+        E->throw( 'oh noes!' );
+    } catch {
+        warn ref $_; # Exception::Simple
+        warn $_; #"oh noes!"
+        warn $_->error; #"oh noes!"
+    };
 
 =head1 METHODS
 
@@ -116,9 +155,9 @@ with just one argument $@->error is set
     # $@ stringifies to $@->error
 
 or set multiple arguments (creates accessors)
-    Exception::Simple->throw( 
+    Exception::Simple->throw(
         error => 'error message',
-        data => 'cutom atrribute',
+        data => 'custom attribute',
     );
     # warn $@->data or something
 
@@ -133,7 +172,7 @@ say you catch an error, but then you want to uncatch it
     } catch {
         if ( $_ eq 'foobar' ){
         #not our error, rethrow
-            $_->rethrow; 
+            $_->rethrow;
         }
     };
 
@@ -141,15 +180,15 @@ say you catch an error, but then you want to uncatch it
 
 accessor for error message (set if only 1 arg is passed to throw)
 
-=head2 package
+=head2 _package
 
 package that threw the exception
 
-=head2 filename
+=head2 _filename
 
 filename of the code that threw the exception
 
-=head2 line
+=head2 _line
 
 line number that threw the exception
 
@@ -175,7 +214,7 @@ Stephen Thirlwall
 
 =head1 SEE ALSO
 
-L<Try::Tiny>
+L<Try::Tiny> L<aliased>
 
 =head1 LICENSE
 

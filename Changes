@@ -1,5 +1,11 @@
 Revision history for perl module Exception::Simple
 
+1.000000 2014-05-08
+    - added package alias option when importing
+    - removed "at filename line n" from stringify method
+    - renamed accessors for package, file, and line to _package, _file and _line
+    - added author tests (spelling/changes)
+
 0.009001 2014-02-22
     - Changed github repo url
 
