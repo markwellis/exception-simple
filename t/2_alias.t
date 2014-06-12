@@ -36,12 +36,12 @@ subtest 'redefine sub' => sub {
         #can't "use" as that's done at compile time
         Exception::Simple->import( qw/E/ );
     } 'redefine dies';
-    is( $@, "sub E already exists in main at t/2_alias.t line 37.\n", 'error correct' );
+    like( $@, qr!sub E already exists in main at t/2_alias\.t line 37!, 'error correct' );
 
     dies_ok{
         Exception::Simple->import( qw/dont_replace_me/ );
     } 'redefine dies';
-    is( $@, "sub dont_replace_me already exists in main at t/2_alias.t line 42.\n", 'error correct' );
+    like( $@, qr!sub dont_replace_me already exists in main at t/2_alias\.t line 42!, 'error correct' );
 
     is( dont_replace_me(), 1, "sub wasn't replaced");
 

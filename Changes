@@ -1,5 +1,8 @@
 Revision history for perl module Exception::Simple
 
+1.000001 2014-05-12
+    - Fixed failing test on *bsd systems
+
 1.000000 2014-05-08
     - added package alias option when importing
     - removed "at filename line n" from stringify method

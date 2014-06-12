@@ -5,6 +5,7 @@
 README\.md
 MYMETA.*
 MANIFEST\.SKIP
+Makefile$
 blib
 \.tar\.gz
 pm_to_blib
